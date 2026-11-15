@@ -1,6 +1,9 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import type { FxRow } from '../lib/data';
-
+import {
+  drawLightRibbons,
+  type RibbonMotion,
+} from '../lib/lightRibbons';
 type Props = {
   data: FxRow[];
   audioEnergyRef: RefObject<number>;
@@ -114,12 +117,15 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
         y: Math.random() * height,
         vx: 0.4 + Math.random() * 1.1,
         vy: (Math.random() - 0.5) * 0.9,
-        size: 9 + Math.random() * 13,
+        size: 4 + Math.random() * 7,
         phase: Math.random() * Math.PI * 2,
         colour: Math.floor(Math.random() * sprites.length),
       })
     );
-
+    const ribbonMotion: RibbonMotion = {
+      heights: [],
+      lastTime: null,
+    };
     let frameId = 0;
     let marketIndex = 20;
     let lastMarketStep = 0;
@@ -146,7 +152,7 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
         // Music is paused: keep the current observation.
         lastMarketStep = time;
 
-      } else if (time - lastMarketStep >= 1000) {
+      } else if (time - lastMarketStep >= 2000) {
         // Music is playing: advance once per second.
         marketIndex += 1;
 
@@ -189,11 +195,29 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
       intensity += (targetIntensity - intensity) * 0.035;
       marketIntensityRef.current = intensity;
 
-      // A translucent overlay leaves light trails behind.
       ctx!.globalCompositeOperation = 'source-over';
       ctx!.globalAlpha = 1;
-      ctx!.fillStyle = 'rgba(5,7,19,0.16)';
+
+      // Paint a fresh dark background each frame.
+      ctx!.fillStyle = '#050713';
       ctx!.fillRect(0, 0, width, height);
+
+// Draw our data-driven ribbons, stars and glitter.
+      drawLightRibbons(
+        ctx!,
+        data,
+        marketIndex,
+        width,
+        height,
+        time,
+        audioEnergyRef.current,
+        intensity,
+        shockRef.current,
+        ribbonMotion
+      );
+
+// Preserve additive blending for our existing particles.
+      ctx!.globalCompositeOperation = 'lighter';
 
       // Overlapping lights become brighter.
       ctx!.globalCompositeOperation = 'lighter';
