@@ -1,75 +1,47 @@
-# React + TypeScript + Vite
+# SYNESTHESIA LAB
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**See what the market feels like.**
 
-Currently, two official plugins are available:
+SYNESTHESIA LAB is an interactive artwork that turns historical EUR/USD exchange-rate movements into light and sound. Upload a song, follow the recorded market, and explore how currency changes affect the dollar value of €1,000.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Developed for **DurHack 2026**.
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Iridescent ribbons shaped by historical prices and recent market movement.
+- Local music uploads with custom playback, seeking, volume and mute controls.
+- Market-driven underwater and gritty audio effects.
+- Market Storm simulations from −2% to +2%.
+- Pip, a music-responsive companion with beginner explanations and a currency quiz.
+- Responsive celestial styling and reduced-motion support.
 
-## Expanding the ESLint configuration
+## How it works
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Historical data** determines the ribbon's path. Recent volatility influences its width and motion, while smoothed price changes shape the sound: rising rates introduce submerged filtering, falling rates introduce a darker, distorted texture. Effects scale relative to the dataset so small recorded changes remain audible.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+**Music** controls sparkle and Pip's dance, independently of market intensity. While a song plays, the replay advances one recorded observation every two seconds; pausing holds that moment.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+**Market Storm** freezes the current historical observation and applies a hypothetical percentage change. It shows the imagined exchange rate and the resulting change in the dollar value of €1,000, with stronger visual and audio effects. Reset returns to historical playback and its current sound.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+These are artistic mappings, not predictions or judgements that rising or falling rates are inherently good or bad. Playback speed and pitch stay unchanged.
 
+## Tech stack
+
+React, TypeScript, Vite, Canvas 2D, Web Audio API, Papa Parse and CSS. The app runs entirely in the browser; uploaded audio stays on your device.
+
+## Run locally
+
+With Node.js and npm installed, run these commands from the project directory:
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Open the local URL printed by Vite. Choose an audio file and press play to begin the historical replay.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Live website
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+[Open SYNESTHESIA LAB](https://YOUR-DEPLOYMENT-URL)
 
-```
+Replace the placeholder above with the deployed website URL.
