@@ -216,7 +216,7 @@
 
 .status-details summary:focus-visible { outline-color: #654c78; }
 
-/* Final refinements: native audio remains the only playback control surface. */
+/* Music-box surround and compact learning disclosures. */
 .music-box-player {
   margin-top: 14px; padding: 10px 8px; border: 1px solid #c7b6dc45;
   border-radius: 15px 15px 9px 9px; background: #cab9df0b;
@@ -244,3 +244,41 @@
 .pip-learning summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 9px 0 1px; }
 .pip-learning summary::-webkit-details-marker { display: none; }
 .pip-learning summary span { float: none; flex-shrink: 0; width: 18px; height: 18px; display: grid; place-items: center; }
+
+/* Focused music-box controls and Pip's question book. No artwork/layout changes. */
+.audio-widget > audio { display: none; }
+.custom-player { padding: 14px 13px 11px; }
+.player-transport { display: flex; align-items: center; gap: 12px; }
+.pearl-play { width: 45px; height: 45px; flex-shrink: 0; display: grid; place-items: center;
+  border: 1px solid #f2dfed; border-radius: 50%; color: #41304e;
+  background: radial-gradient(circle at 30% 22%, #fff8f4, #e8d7ee 42%, #b69acb);
+  box-shadow: inset 0 1px #fffc, 0 0 15px #d1b4ea23; }
+.pearl-play:hover { filter: brightness(1.08); }
+.pearl-play:active { filter: brightness(.94); }
+.player-transport svg, .player-volume svg { width: 21px; height: 21px; fill: currentColor; }
+.player-time { margin-left: auto; color: #eadcef; font-size: .75rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.player-time > span { color: #b6a5c7; }
+.music-wave { --music-energy: 0; height: 25px; display: flex; gap: 3px; align-items: center; color: #b8dce6; }
+.music-wave i { width: 2px; height: 20px; border-radius: 3px; background: currentColor; transform: scaleY(calc(.2 + var(--music-energy) * .6)); opacity: calc(.45 + var(--music-energy) * .5); }
+.music-wave i:nth-child(2n) { height: 12px; }
+.music-wave i:nth-child(3) { height: 25px; }
+.player-volume { display: flex; align-items: center; gap: 7px; }
+.player-volume button { background: none; color: #ddc9e7; border: 0; display: grid; place-items: center; width: 44px; height: 44px; padding: 8px; flex-shrink: 0; border-radius: 5px; }
+.player-volume button:hover { background: #dec2ed13; }
+.custom-player input[type="range"] { appearance: none; width: 100%; height: 30px; margin: 5px 0 0; background: transparent; cursor: pointer; border-radius: 4px; }
+.custom-player input[type="range"]::-webkit-slider-runnable-track { height: 3px; background: linear-gradient(90deg, #cbb0df, #e7daed); border-radius: 3px; }
+.custom-player input[type="range"]::-moz-range-track { height: 3px; background: linear-gradient(90deg, #cbb0df, #e7daed); border-radius: 3px; }
+.custom-player input[type="range"]::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; border: 1px solid #f0dfef; margin-top: -4.5px; border-radius: 50%; background: #e4d4eb; box-shadow: 0 0 7px #d2bae65c; }
+.custom-player input[type="range"]::-moz-range-thumb { width: 11px; height: 11px; border: 1px solid #f0dfef; border-radius: 50%; background: #e4d4eb; box-shadow: 0 0 7px #d2bae65c; }
+.custom-player input[type="range"]:disabled { opacity: .4; cursor: default; }
+.player-volume input[type="range"] { margin: 0; height: 44px; }
+.storm-audio-note { font-size: .68rem; line-height: 1.55; color: #b6a5c7; margin: 5px 0 0; }
+.audio-error { font-size: .78rem; line-height: 1.5; color: #f1c3d9; }
+.ask-pip-caption { font: italic .85rem/1.5 Georgia, serif; color: #c8b4d5; margin: 7px 0 11px; }
+.pip-question-book { border-left: 1px solid #c1a1d34a; padding-left: 11px; }
+.pip-question-book button { display: block; width: 100%; min-height: 39px; padding: 8px 7px; background: transparent; border: 0; border-bottom: 1px solid #bca3cd20; color: #cfc2dc; font-size: .78rem; line-height: 1.4; text-align: left; border-radius: 3px; }
+.pip-question-book button:hover { color: #f6e8fa; background: #dfbfe90a; }
+.pip-question-book button[aria-pressed="true"] { color: #f3daee; background: #d6b9e515; }
+.ask-pip .pip-answer { padding: 12px 0 0 12px; border-left: 1px solid #e0c5e26b; }
+@media (max-width: 700px) { .pip-question-book button { min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .music-wave i { transform: scaleY(.4); opacity: .6; } }

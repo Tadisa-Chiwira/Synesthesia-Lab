@@ -12,6 +12,7 @@ import './celestial.css';
 import Celestial from './components/Celestial';
 
 import { loadFxData, type FxRow } from './lib/data';
+import { buildHistoricalAudio } from './lib/historicalAudio';
 import {
   calculateMetrics,
   calculateVolatilityBands,
@@ -35,10 +36,16 @@ function App() {
   const isMusicPlayingRef = useRef(false);
 
   const playbackIndexRef = useRef(20);
+  const historicalAudioRef = useRef(0);
+  const historicalAudio = useMemo(() => buildHistoricalAudio(data), [data]);
 
   const handlePlaybackIndexChange = useCallback(
-    (index: number) => { playbackIndexRef.current = index; setPlaybackIndex(index); },
-    []
+    (index: number) => {
+      playbackIndexRef.current = index;
+      historicalAudioRef.current = historicalAudio[index] ?? 0;
+      setPlaybackIndex(index);
+    },
+    [historicalAudio]
   );
 
   useEffect(() => {
@@ -154,6 +161,8 @@ function App() {
         <aside className="rail rail-left">
           <div className="soundtrack-panel">
             <AudioControls
+              historicalAudioRef={historicalAudioRef}
+              shockRef={shockRef}
               audioEnergyRef={audioEnergyRef}
               marketIntensityRef={marketIntensityRef}
               isMusicPlayingRef={isMusicPlayingRef}
