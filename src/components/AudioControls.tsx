@@ -157,7 +157,7 @@ export default function AudioControls({ audioEnergyRef, marketIntensityRef, isMu
   }
 
   return (
-    <section style={{ margin: '30px auto', maxWidth: 600 }}>
+    <section className="audio-widget">
       <h2>Your Soundtrack</h2>
       <p>Let your music bring the market to life.</p>
 

@@ -11,14 +11,14 @@ type Props = {
   baseTimestamp: string;
 };
 
-function formatUtc(timestamp: string) {
-  return (
-    new Date(timestamp).toLocaleString('en-GB', {
-      timeZone: 'UTC',
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }) + ' UTC'
-  );
+function formatTime(timestamp: string) {
+  return new Date(timestamp).toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  }) + ' UTC';
 }
 
 export default function StatusPanel({
@@ -32,129 +32,128 @@ export default function StatusPanel({
 }: Props) {
   const isSimulating = shockPercent !== 0;
 
+  const displayedRate = isSimulating
+    ? baseRate * (1 + shockPercent / 100)
+    : historicalRow.EURUSD;
+
+  const dollarChange = 1000 * (displayedRate - baseRate);
+
   const turbulence =
     historicalVolatility < bands.calmMax
       ? 'Calm'
       : historicalVolatility < bands.turbulentMin
-        ? 'Moderate'
+        ? 'A little restless'
         : 'Turbulent';
 
-  const direction =
+  const movement =
     historicalReturn > 0
-      ? 'The euro strengthened against the dollar'
+      ? 'The euro moved up against the dollar.'
       : historicalReturn < 0
-        ? 'The euro weakened against the dollar'
-        : 'The exchange rate stayed unchanged';
-
-  const simulatedRate = baseRate * (1 + shockPercent / 100);
-  const dollarChange = 1000 * (simulatedRate - baseRate);
+        ? 'The euro moved down against the dollar.'
+        : 'The exchange rate stayed unchanged.';
 
   return (
-    <section
-      style={{
-        maxWidth: 720,
-        margin: '28px auto',
-        padding: 24,
-        borderRadius: 20,
-        background: '#171327',
-        border: '1px solid rgba(220,180,255,0.2)',
-        textAlign: 'left',
-      }}
-    >
-      <h2 style={{ marginTop: 0 }}>Now Showing</h2>
+    <section className="status-widget">
+      <div className="status-header">
+        <span className="stage-kicker">Now Showing</span>
+        <span className="status-mode">
+          {isSimulating ? 'Imagined' : 'Recorded'}
+        </span>
+      </div>
+
+      <p className="status-rate-caption">
+        One euro is worth
+      </p>
+
+      <div className="status-big-rate">
+        ${displayedRate.toFixed(4)}
+      </div>
+
+      <p className="status-timestamp">
+        {formatTime(
+          isSimulating
+            ? baseTimestamp
+            : historicalRow.timestamp
+        )}
+      </p>
+
+      <div className="status-divider" />
 
       {isSimulating ? (
         <>
-          <p>
-            <strong>Mode:</strong> Hypothetical experiment
+          <p className="status-description">
+            You imagined the euro{' '}
+            {shockPercent > 0
+              ? 'getting stronger'
+              : 'getting weaker'}.
           </p>
 
-          <p>
-            We're imagining that the exchange rate suddenly
-            changes. This is not a prediction.
-          </p>
+          <div className="status-highlight">
+            €1,000 is worth{' '}
+            <strong>
+              ${Math.abs(dollarChange).toFixed(2)}
+            </strong>{' '}
+            {dollarChange >= 0 ? 'more' : 'less'} in dollars.
+          </div>
 
-          <p>
-            <strong>Starting point:</strong>{' '}
-            {formatUtc(baseTimestamp)}
-          </p>
-
-          <p>
-            <strong>Before the shock:</strong> €1 buys $
-            {baseRate.toFixed(6)}
-          </p>
-
-          <p>
-            <strong>Your simulated change:</strong>{' '}
-            {shockPercent > 0 ? '+' : ''}
-            {shockPercent.toFixed(1)}%
-          </p>
-
-          <p>
-            <strong>After the shock:</strong> €1 buys $
-            {simulatedRate.toFixed(6)}
-          </p>
-
-          <p>
-            <strong>Effect on €1,000:</strong>{' '}
-            {dollarChange >= 0 ? '+' : '-'}$
-            {Math.abs(dollarChange).toFixed(2)}
-          </p>
-
-          <p style={{ opacity: 0.8, fontSize: 14 }}>
-            We are changing the exchange rate in a pretend
-            scenario. The amount of euros stays the same,
-            but their value in US dollars changes.
+          <p className="status-small-note">
+            This is a pretend change, not a prediction.
           </p>
         </>
       ) : (
         <>
-          <p>
-            <strong>Mode:</strong> Replay of real market data
-          </p>
+          <div className="status-energy">
+            <span>Market movement</span>
+            <strong>{turbulence}</strong>
+          </div>
 
-          <p>
-            <strong>When:</strong>{' '}
-            {formatUtc(historicalRow.timestamp)}
-          </p>
+          <div className="energy-track">
+            <div
+              className="energy-fill"
+              style={{
+                width:
+                  turbulence === 'Calm'
+                    ? '25%'
+                    : turbulence === 'A little restless'
+                      ? '55%'
+                      : '90%',
+              }}
+            />
+          </div>
 
-          <p>
-            <strong>Exchange rate:</strong> €1 buys $
-            {historicalRow.EURUSD.toFixed(6)}
-          </p>
-
-          <p>
-            <strong>Recent price move:</strong>{' '}
-            {historicalReturn > 0 ? '+' : ''}
-            {(historicalReturn * 100).toFixed(4)}%
-          </p>
-
-          <p>
-            <strong>What changed:</strong> {direction}.
-          </p>
-
-          <p>
-            <strong>Market turbulence:</strong> {turbulence}
-          </p>
-
-          <p>
-            <strong>Measured volatility:</strong>{' '}
-            {(historicalVolatility * 100).toFixed(4)}%
-          </p>
-
-          <p style={{ opacity: 0.8, fontSize: 14 }}>
-            Turbulence describes how much the exchange rate
-            has been jumping around recently. Our categories
-            compare the last 20 recorded price changes with
-            the rest of this dataset.
-          </p>
-
-          <p style={{ opacity: 0.8, fontSize: 14 }}>
-            At 0% simulated shock, the historical market
-            still affects the particles and the music.
+          <p className="status-description">
+            {movement}
           </p>
         </>
       )}
+
+      <details className="status-details">
+        <summary>What does this mean?</summary>
+
+        <p>
+          An exchange rate tells us how much one
+          currency is worth in another currency.
+          EUR/USD compares euros with US dollars.
+        </p>
+
+        {isSimulating ? (
+          <p>
+            We started at ${baseRate.toFixed(4)} per euro
+            and imagined a {Math.abs(shockPercent).toFixed(1)}%
+            {' '}change. Your euros stayed the same,
+            but their dollar value changed.
+          </p>
+        ) : (
+          <p>
+            Market turbulence means how much the rate
+            has been jumping around recently. We compare
+            the last 20 recorded changes with the rest
+            of this historical dataset.
+            The measured volatility is{' '}
+            {(historicalVolatility * 100).toFixed(4)}%.
+          </p>
+        )}
+      </details>
     </section>
   );
 }

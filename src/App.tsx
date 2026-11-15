@@ -7,8 +7,9 @@ import {
   useState,
 } from 'react';
 
-import { loadFxData, type FxRow } from './lib/data';
+import './App.css';
 
+import { loadFxData, type FxRow } from './lib/data';
 import {
   calculateMetrics,
   calculateVolatilityBands,
@@ -22,21 +23,17 @@ import Pip from './components/Pip';
 function App() {
   const [data, setData] = useState<FxRow[]>([]);
   const [error, setError] = useState<string | null>(null);
-
   const [playbackIndex, setPlaybackIndex] = useState(20);
   const [shockPercent, setShockPercent] = useState(0);
+  const [simulationStartIndex, setSimulationStartIndex] = useState<number | null>(null);
 
-  // Shared, continuously changing values.
   const audioEnergyRef = useRef(0);
   const marketIntensityRef = useRef(0);
   const shockRef = useRef(0);
   const isMusicPlayingRef = useRef(false);
 
-  // The Canvas reports the observation it is displaying.
   const handlePlaybackIndexChange = useCallback(
-    (index: number) => {
-      setPlaybackIndex(index);
-    },
+    (index: number) => setPlaybackIndex(index),
     []
   );
 
@@ -49,9 +46,7 @@ function App() {
       })
       .catch((err) => {
         if (active) {
-          setError(
-            err instanceof Error ? err.message : String(err)
-          );
+          setError(err instanceof Error ? err.message : String(err));
         }
       });
 
@@ -60,37 +55,33 @@ function App() {
     };
   }, []);
 
-  // Calculate comparison thresholds only when data changes.
   const bands = useMemo(() => {
     if (data.length < 21) return null;
-
     return calculateVolatilityBands(data, 'EURUSD');
   }, [data]);
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <p role="alert">Could not load market data: {error}</p>;
   }
 
   if (data.length < 21 || !bands) {
     return <p>Preparing your market experience...</p>;
   }
 
-  // This row matches the Canvas's current playback position.
   const index = Math.min(
     Math.max(playbackIndex, 20),
     data.length - 1
   );
 
   const historicalRow = data[index];
-
   const historicalMetrics = calculateMetrics(
     data.slice(0, index + 1),
     'EURUSD'
   );
 
-  // Simulations are anchored to the final recorded rate.
-  const finalRow = data[data.length - 1];
-  const baseRate = finalRow.EURUSD;
+  // Use the current replay moment as the experiment's baseline.
+  const baselineRow = data[simulationStartIndex ?? index];
+  const baseRate = baselineRow.EURUSD;
 
   const simulatedRate =
     baseRate * (1 + shockPercent / 100);
@@ -98,167 +89,221 @@ function App() {
   const usdChange =
     1000 * (simulatedRate - baseRate);
 
-  const turbulence =
-    historicalMetrics.volatility < bands.calmMax
-      ? 'calm'
-      : historicalMetrics.volatility < bands.turbulentMin
-        ? 'moderate'
-        : 'turbulent';
+  const isSimulating = shockPercent !== 0;
 
-  const historicalMovement =
-    historicalMetrics.latestReturn > 0
-      ? 'risen against the dollar'
-      : historicalMetrics.latestReturn < 0
-        ? 'fallen against the dollar'
-        : 'stayed unchanged against the dollar';
+  const pipCommentary = isSimulating
+    ? `Ooooh! You've imagined the euro ${
+      shockPercent > 0 ? 'getting stronger' : 'getting weaker'
+      }. Look at how the lights and dollar value change!`
+    : `We're turning real currency movements into light and sound.
+       Let's see if you can predict what happens next!`;
 
-  // Pip interprets the experience in beginner-friendly language.
-  const pipCommentary =
-  shockPercent !== 0
-    ? `Ooooh! You just simulated a
-       ${Math.abs(shockPercent).toFixed(1)}% 
-       ${shockPercent > 0 ? 'rise' : 'fall'} in EUR/USD!
-
-       If you held €1,000, its value in dollars
-       would be $${Math.abs(usdChange).toFixed(2)}
-       ${usdChange > 0 ? 'higher' : 'lower'}.
-
-       See how changing the exchange rate
-       also changed the lights and music?`
-    : `We're watching real historical exchange rates!
-
-       Every time the euro changes value against
-       the dollar, our market picture changes too.
-
-       If the market becomes more turbulent,
-       you'll notice the lights becoming more
-       energetic and the music sounding different.
-
-       Watch the numbers in "Now Showing" to
-       discover what's happening!`;
   function changeShock(value: number) {
+  // Remember the market moment when a new experiment begins.
+    if (shockRef.current === 0 && value !== 0) {
+      setSimulationStartIndex(playbackIndex);
+    }
+
+  // Release that starting point when the experiment ends.
+    if (value === 0) {
+      setSimulationStartIndex(null);
+    }
+
     shockRef.current = value;
     setShockPercent(value);
   }
 
   return (
-    <main
-      style={{
-        maxWidth: 1100,
-        margin: '0 auto',
-        padding: '24px 20px',
-      }}
-    >
-      <h1>SYNESTHESIA LAB</h1>
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="wordmark">
+          <span className="wordmark-star">✦</span>
+          SYNESTHESIA LAB
+        </div>
 
-      <p>The invisible has a rhythm.</p>
+        <div className="mode-indicator">
+          <span
+            className={
+              isSimulating ? 'mode-dot simulated' : 'mode-dot'
+            }
+          />
+          {isSimulating
+            ? 'Hypothetical experiment'
+            : 'Real market replay'}
+        </div>
 
-      <p style={{ maxWidth: 650, margin: '20px auto' }}>
-        Ever wondered why currencies change value?
-        Explore real exchange rates through music,
-        glowing visuals and interactive experiments.
-      </p>
+        <div className="topbar-note">
+          An experiment in light, sound and currency
+        </div>
+      </header>
 
-      <p style={{ fontSize: 14, opacity: 0.75 }}>
-        EUR/USD tells you how many US dollars one euro buys.
-        We have {data.length.toLocaleString()} historical observations
-        to explore.
-      </p>
-
-      <AudioControls
-        audioEnergyRef={audioEnergyRef}
-        marketIntensityRef={marketIntensityRef}
-        isMusicPlayingRef={isMusicPlayingRef}
-      />
-
-      <VisualCanvas
-        data={data}
-        audioEnergyRef={audioEnergyRef}
-        marketIntensityRef={marketIntensityRef}
-        shockRef={shockRef}
-        isMusicPlayingRef={isMusicPlayingRef}
-        shockPercent={shockPercent}
-        onPlaybackIndexChange={handlePlaybackIndexChange}
-      />
-
-      <StatusPanel
-        shockPercent={shockPercent}
-        historicalRow={historicalRow}
-        historicalReturn={historicalMetrics.latestReturn}
-        historicalVolatility={historicalMetrics.volatility}
-        bands={bands}
-        baseRate={baseRate}
-        baseTimestamp={finalRow.timestamp}
-      />
-
-      <Pip
-        baseRate={baseRate}
-        commentary={pipCommentary}
-      />
-
-      <section
-        style={{
-          maxWidth: 650,
-          margin: '40px auto',
-          padding: 24,
-          borderRadius: 20,
-          background: '#211b36',
-        }}
-      >
-        <h2>Market Storm Simulator</h2>
-
-        <p>
-          Let's imagine the exchange rate changes suddenly.
-          How would that affect someone holding €1,000?
+      <section className="intro">
+        <p className="eyebrow">
+          EUR / USD · A study in light and sound
         </p>
 
-        <label htmlFor="shock">
-          Change the EUR/USD exchange rate
-        </label>
+        <h1>
+          See what the market <em>feels</em> like.
+        </h1>
 
-        <input
-          id="shock"
-          type="range"
-          min="-2"
-          max="2"
-          step="0.1"
-          value={shockPercent}
-          onChange={(event) =>
-            changeShock(Number(event.target.value))
-          }
-          style={{ width: '100%', marginTop: 20 }}
-        />
-
-        <h3>
-          {shockPercent > 0 ? '+' : ''}
-          {shockPercent.toFixed(1)}%
-        </h3>
-
-        <p>
-          Starting exchange rate: {baseRate.toFixed(6)}
-        </p>
-
-        <p>
-          Simulated exchange rate: {simulatedRate.toFixed(6)}
-        </p>
-
-        <p>
-          Change in dollar value of €1,000:{' '}
-          {usdChange >= 0 ? '+' : '-'}$
-          {Math.abs(usdChange).toFixed(2)}
-        </p>
-
-        <button onClick={() => changeShock(0)}>
-          Reset to historical replay
-        </button>
-
-        <p style={{ fontSize: 13, opacity: 0.75 }}>
-          This experiment uses the last historical exchange
-          rate as its starting point. It is not a forecast.
-          At 0%, the historical market still affects the music.
+        <p className="intro-description">
+          Discover how currencies change value
+          through music, shimmering light and play.
         </p>
       </section>
-    </main>
+
+      <main className="experience-grid">
+        {/* LEFT: Music and market explanation */}
+        <aside className="rail rail-left">
+          <div className="glass-panel soundtrack-panel">
+            <AudioControls
+              audioEnergyRef={audioEnergyRef}
+              marketIntensityRef={marketIntensityRef}
+              isMusicPlayingRef={isMusicPlayingRef}
+            />
+          </div>
+
+          <div className="glass-panel status-panel">
+            <StatusPanel
+              shockPercent={shockPercent}
+              historicalRow={historicalRow}
+              historicalReturn={historicalMetrics.latestReturn}
+              historicalVolatility={historicalMetrics.volatility}
+              bands={bands}
+              baseRate={baseRate}
+              baseTimestamp={baselineRow.timestamp}
+            />
+          </div>
+        </aside>
+
+        {/* CENTRE: The living artwork */}
+        <section className="glass-panel stage-panel">
+          <div className="stage-heading">
+            <div className="stage-kicker">
+              Market in Motion
+            </div>
+
+            <h2>
+              Light follows value.
+              Rhythm follows change.
+            </h2>
+          </div>
+
+          <VisualCanvas
+            data={data}
+            audioEnergyRef={audioEnergyRef}
+            marketIntensityRef={marketIntensityRef}
+            shockRef={shockRef}
+            isMusicPlayingRef={isMusicPlayingRef}
+            shockPercent={shockPercent}
+            onPlaybackIndexChange={handlePlaybackIndexChange}
+          />
+
+          <div className="stage-footer">
+            <span>
+              {isSimulating
+                ? 'Imagined exchange-rate change'
+                : 'Recorded EUR/USD movements'}
+            </span>
+            <span>
+              {isSimulating
+                ? 'Simulation'
+                : 'Historical data'}
+            </span>
+          </div>
+        </section>
+
+        {/* RIGHT: Pip and the experiment */}
+        <aside className="rail rail-right">
+          <div className="glass-panel pip-panel">
+            <Pip
+              baseRate={baseRate}
+              commentary={pipCommentary}
+              audioEnergyRef={audioEnergyRef}
+              marketIntensityRef={marketIntensityRef}
+            />
+          </div>
+
+          <div className="glass-panel storm-panel">
+            <section className="storm-widget">
+              <div className="stage-kicker">
+                Market Storm
+              </div>
+
+              <h2>Conduct the current</h2>
+
+              <p>
+                What if the euro suddenly changed value?
+                Try it below.
+              </p>
+
+              <div
+                className="shock-number"
+                aria-live="off"
+              >
+                {shockPercent > 0 ? '+' : ''}
+                {shockPercent.toFixed(1)}%
+              </div>
+
+              <label htmlFor="shock">
+                Change the exchange rate
+              </label>
+
+              <input
+                id="shock"
+                type="range"
+                min="-2"
+                max="2"
+                step="0.1"
+                value={shockPercent}
+                onChange={(event) =>
+                  changeShock(Number(event.target.value))
+                }
+              />
+
+              <div className="slider-labels">
+                <span>−2% weaker</span>
+                <span>+2% stronger</span>
+              </div>
+
+              <div className="storm-results">
+                <div className="storm-result">
+                  <span>New rate: €1 buys</span>
+                  <strong>
+                    ${simulatedRate.toFixed(4)}
+                  </strong>
+                </div>
+
+                <div className="storm-result">
+                  <span>Change in value of €1,000</span>
+                  <strong>
+                    {usdChange >= 0 ? '+' : '-'}$
+                    {Math.abs(usdChange).toFixed(2)}
+                  </strong>
+                </div>
+              </div>
+
+              <button
+                className="reset-button"
+                onClick={() => changeShock(0)}
+              >
+                Reset experiment
+              </button>
+
+              <p className="simulation-note">
+                A pretend change based on a recorded
+                exchange rate, not a prediction.
+              </p>
+            </section>
+          </div>
+        </aside>
+      </main>
+
+      <footer className="app-footer">
+        FX DATA SONIFICATION EXPERIMENT ·
+        HISTORICAL DATA AND HYPOTHETICAL SCENARIOS
+      </footer>
+    </div>
   );
 }
 

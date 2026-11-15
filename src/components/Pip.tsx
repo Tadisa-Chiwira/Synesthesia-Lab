@@ -1,16 +1,71 @@
-
-import { useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
 type Answer = 'increase' | 'decrease' | 'same';
 
 type Props = {
   baseRate: number;
-  commentary: String;
+  commentary: string;
+  audioEnergyRef: RefObject<number>;
+  marketIntensityRef: RefObject<number>;
 };
 
-export default function Pip({ baseRate, commentary, }: Props) {
+export default function Pip({
+  baseRate,
+  commentary,
+  audioEnergyRef,
+  marketIntensityRef,
+}: Props) {
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [revealed, setRevealed] = useState(false);
+
+  const faceRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let frame = 0;
+
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+
+    if (reducedMotion) return;
+
+    function dance(time: number) {
+      const face = faceRef.current;
+
+      if (face) {
+        const music = Math.min(1, audioEnergyRef.current);
+        const market = Math.min(1, marketIntensityRef.current);
+
+        // Music produces the gentle dancing.
+        const bounce =
+          Math.sin(time * 0.006) * music * 7;
+
+        // Market intensity adds a little wobble.
+        const rotation =
+          Math.sin(time * 0.004) * music * 6 +
+          Math.sin(time * 0.012) * market * 2;
+
+        const scale = 1 + music * 0.08;
+
+        const glow = 18 + music * 42 + market * 12;
+
+        face.style.transform =
+          `translateY(${bounce}px) ` +
+          `rotate(${rotation}deg) ` +
+          `scale(${scale})`;
+
+        face.style.boxShadow =
+          `0 0 ${glow}px rgba(218,159,255,0.7), ` +
+          `0 0 ${glow * 1.6}px rgba(182,104,255,0.2)`;
+      }
+
+      frame = requestAnimationFrame(dance);
+    }
+
+    frame = requestAnimationFrame(dance);
+
+    return () => cancelAnimationFrame(frame);
+  }, [audioEnergyRef, marketIntensityRef]);
 
   const choices: { value: Answer; label: string }[] = [
     { value: 'increase', label: 'It increases' },
@@ -21,90 +76,42 @@ export default function Pip({ baseRate, commentary, }: Props) {
   const gain = (1000 * baseRate * 0.01).toFixed(2);
 
   return (
-    <section
-      style={{
-        maxWidth: 600,
-        margin: '40px auto',
-        padding: 24,
-        borderRadius: 20,
-        background: '#211b36',
-      }}
-    >
-      <div
-        role="img"
-        aria-label="Pip, your curious market companion"
-        style={{
-          width: 76,
-          height: 76,
-          margin: '0 auto 12px',
-          borderRadius: '50%',
-          display: 'grid',
-          placeItems: 'center',
-          fontSize: 30,
-          color: '#35204a',
-          background:
-            'radial-gradient(circle at 35% 25%, #fff, #e4b5ff 55%, #aa71ed)',
-          boxShadow: '0 0 24px rgba(190,125,255,0.45)',
-        }}
-      >
-        •ᴗ•
+    <section className="pip-widget">
+      <div className="pip-mini-header">
+        <div className="pip-face" ref={faceRef}>
+          •ᴗ•
+        </div>
+
+        <div>
+          <span className="stage-kicker">Pip notices...</span>
+          <h2>Can you read the current?</h2>
+        </div>
       </div>
 
-      <h2>Meet Pip!</h2>
+      <p className="pip-commentary">{commentary}</p>
 
-      <p>
-        Hiiii! I'm Pip! Apparently currencies can get
-        stronger and weaker. That's a lot of responsibility
-        for something you can't even hold.
-      </p>
-      <div
-        style={{
-            padding: '14px 18px',
-            margin: '20px 0',
-            borderRadius: 14,
-            background: 'rgba(190,125,255,0.12)',
-            border: '1px solid rgba(190,125,255,0.3)',
-            textAlign: 'left',
-        }}
->
-        <strong>✨ Pip notices...</strong>
-        <p style={{ marginBottom: 0 }}>{commentary}</p>
+      <div className="pip-question">
+        <strong>Let's make a prediction!</strong>
+
+        <p>
+          If one euro starts buying more dollars,
+          what happens to the dollar value of €1,000?
+        </p>
       </div>
 
-      <h3>Let's make a prediction!</h3>
-
-      <p>
-        Suppose you have €1,000 and the EUR/USD
-        exchange rate increases by 1%.
-      </p>
-
-      <p>
-        What happens to the value of your euros
-        when measured in US dollars?
-      </p>
-
-      <div style={{ display: 'grid', gap: 10 }}>
+      <div className="pip-options">
         {choices.map((choice) => (
           <button
             key={choice.value}
+            className={
+              answer === choice.value
+                ? 'pip-option selected'
+                : 'pip-option'
+            }
             aria-pressed={answer === choice.value}
             onClick={() => {
               setAnswer(choice.value);
               setRevealed(false);
-            }}
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              border:
-                answer === choice.value
-                  ? '2px solid #dcb4ff'
-                  : '2px solid #514367',
-              background:
-                answer === choice.value
-                  ? '#493264'
-                  : '#2a2341',
-              color: 'white',
-              cursor: 'pointer',
             }}
           >
             {choice.label}
@@ -113,35 +120,34 @@ export default function Pip({ baseRate, commentary, }: Props) {
       </div>
 
       <button
+        className="pip-check"
         disabled={!answer}
         onClick={() => setRevealed(true)}
-        style={{ marginTop: 18 }}
       >
         Check my prediction
       </button>
 
       {revealed && (
-        <div style={{ marginTop: 20 }}>
-          <h3>
+        <div className="pip-feedback" aria-live="polite">
+          <strong>
             {answer === 'increase'
-              ? '✨ You got it!'
-              : '✨ Let’s investigate!'}
-          </h3>
+              ? '✨ Exactly!'
+              : '✨ Let’s explore that!'}
+          </strong>
 
           <p>
-            EUR/USD tells us how many US dollars
-            one euro is worth.
+            When one euro buys more dollars,
+            €1,000 becomes worth more in dollars too.
           </p>
 
           <p>
-            When EUR/USD increases, each euro buys
-            more dollars. So your €1,000 becomes worth
-            approximately ${gain} more.
+            For a 1% rise from our starting rate,
+            that's about ${gain} more.
           </p>
 
           <p>
-            Now try setting the simulator below to +1%
-            and watch the numbers change!
+            Try moving the Market Storm slider
+            to +1% and watch the result!
           </p>
         </div>
       )}

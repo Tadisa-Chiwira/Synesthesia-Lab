@@ -138,13 +138,13 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
       const shock = shockRef.current;
 
       if (shock !== 0) {
-        // Hold the final historical observation during simulation.
-        marketIndex = data.length - 1;
+        // Freeze the current historical observation.
+        // The simulated price change is drawn separately.
         wasSimulating = true;
+        lastMarketStep = time;
 
       } else if (wasSimulating) {
-        // Restart the historical replay after a simulation.
-        marketIndex = 20;
+        // Return to the same historical moment, not the beginning.
         lastMarketStep = time;
         wasSimulating = false;
 
@@ -285,26 +285,11 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
   }, [data, audioEnergyRef, marketIntensityRef, shockRef, isMusicPlayingRef,onPlaybackIndexChange,]);
 
   return (
-    <section style={{ width: 'min(1000px, 92vw)', margin: '32px auto' }}>
-      <h2>Market in Motion</h2>
-      <p>
-        EUR/USD •{' '}
-        {shockPercent === 0
-            ? 'Historical market replay'
-            : 'Hypothetical market experiment'}
-      </p>
-
+    <section className="visual-widget">
       <canvas
         ref={canvasRef}
-        aria-label="Glowing particles reacting to historical EUR/USD volatility"
-        style={{
-          display: 'block',
-          width: '100%',
-          height: 420,
-          borderRadius: 20,
-          background: '#050713',
-          boxShadow: '0 0 55px rgba(130,90,255,0.2)',
-        }}
+        className="visual-canvas"
+        aria-label="Glowing light ribbons and particles responding to historical currency movements and music"
       />
     </section>
   );
