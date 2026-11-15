@@ -8,10 +8,18 @@ type Point = {
 export type RibbonMotion = {
   heights: number[];
   lastTime: number | null;
+  shock?: number;
+  flowTime?: number;
+  priceBounds?: { data: FxRow[]; min: number; max: number };
 };
 
 const TAU = Math.PI * 2;
 const SAMPLES = 160;
+
+function taper(progress: number): number {
+  const edge = clamp(Math.min(progress, 1 - progress) / 0.14);
+  return edge * edge * (3 - 2 * edge);
+}
 
 // Keep values within a specified range.
 function clamp(value: number, min = 0, max = 1): number {
@@ -41,17 +49,7 @@ function sampleCurve(
 
   const t = position - i;
 
-  const p0 = values[Math.max(0, i - 1)];
-  const p1 = values[i];
-  const p2 = values[i + 1];
-  const p3 = values[Math.min(values.length - 1, i + 2)];
-
-  return 0.5 * (
-    2 * p1 +
-    (-p0 + p2) * t +
-    (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t +
-    (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t
-  );
+  return values[i] + (values[i + 1] - values[i]) * t;
 }
 
 // Draw a shiny four-pointed star.
@@ -120,7 +118,8 @@ export function drawLightRibbons(
   musicEnergy: number,
   marketIntensity: number,
   shockPercent: number,
-  motion: RibbonMotion
+  motion: RibbonMotion,
+  reducedMotion = false
 ): void {
   if (data.length < 2 || width <= 0 || height <= 0) {
     return;
@@ -137,36 +136,24 @@ export function drawLightRibbons(
   
 
   const energy = clamp(musicEnergy);
-  const turbulence = clamp(marketIntensity);
-  const seconds = time * 0.001;
+  const historicalTurbulence = clamp(marketIntensity);
+  const seconds = reducedMotion ? 0 : time * 0.001;
 
   // -------------------------------------------------
   // 1. SMOOTH THE HISTORICAL PRICE SHAPE
   // -------------------------------------------------
 
-  const smoothedPrices = prices.map((price, i) => {
-    let sum = 0;
-    let weightSum = 0;
-
-    for (
-        let j = Math.max(0, i - 3);
-        j <= Math.min(prices.length - 1, i + 3);
-        j++
-    ) {
-        const weight = 4 - Math.abs(j - i);
-
-        sum += prices[j] * weight;
-        weightSum += weight;
-    }
-
-    return sum / weightSum;
-  });
-
-  const minPrice = Math.min(...smoothedPrices);
-  const maxPrice = Math.max(...smoothedPrices);
-
-  const middle = (minPrice + maxPrice) / 2;
-  const range = Math.max(maxPrice - minPrice, 0.0005);
+  // Fixed dataset bounds prevent the viewport from rescaling at each observation.
+  // Fabric smoothing is artistic; displayed prices always use exact observations.
+  if (motion.priceBounds?.data !== data) {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const row of data) { min = Math.min(min, row.EURUSD); max = Math.max(max, row.EURUSD); }
+    motion.priceBounds = { data, min, max };
+  }
+  const smoothedPrices = prices;
+  const middle = (motion.priceBounds.min + motion.priceBounds.max) / 2;
+  const range = Math.max(motion.priceBounds.max - motion.priceBounds.min, 0.0005);
 
   const targetHeights = Array.from(
     { length: SAMPLES },
@@ -200,11 +187,11 @@ export function drawLightRibbons(
 
   motion.lastTime = time;
 
-  if (motion.heights.length !== SAMPLES) {
+  if (reducedMotion || motion.heights.length !== SAMPLES) {
     motion.heights = [...targetHeights];
   } else {
     const transitionTime =
-      shockPercent !== 0 ? 0.9 : 1.7;
+      0.65;
 
     const easing =
       1 - Math.exp(-deltaSeconds / transitionTime);
@@ -215,6 +202,20 @@ export function drawLightRibbons(
         easing;
     }
   }
+
+  motion.heights[SAMPLES - 1] = targetHeights[SAMPLES - 1];
+
+  // Smooth slider changes and integrate phase so changing intensity never jumps the wave.
+  const shockTarget = clamp(shockPercent / 2, -1, 1);
+  motion.shock = reducedMotion ? shockTarget :
+    (motion.shock ?? 0) + (shockTarget - (motion.shock ?? 0)) * (1 - Math.exp(-deltaSeconds / 0.65));
+  const signedShock = motion.shock;
+  const shockPower = Math.abs(signedShock);
+  const turbulence = clamp(historicalTurbulence + shockPower * 0.22);
+  const amplitude = 1 + shockPower * 2.1;
+  motion.flowTime = (motion.flowTime ?? 0) +
+    (reducedMotion ? 0 : deltaSeconds * (1 + turbulence * 0.18 + shockPower * 0.18));
+  const flowTime = motion.flowTime;
 
   // The underlying data curve.
   function pricePoint(progress: number): Point {
@@ -249,23 +250,17 @@ export function drawLightRibbons(
   ): Point {
     const base = pricePoint(progress);
 
-    const slowWave =
-      Math.sin(
-        progress * 8 -
-        seconds * 0.24 +
-        layer * 1.4
-      ) * (8 + energy * 4);
-
-    const fineWave =
-      Math.sin(
-        progress * 15 +
-        seconds * 0.38 +
-        layer * 2.2
-      ) * (2 + turbulence * 2);
-
+    // A shared broad wave keeps translucent fabric layers reading as one ribbon.
+    // This is an artistic simulation response, not a hypothetical historical price.
+    const envelope = taper(progress);
+    const slowWave = Math.sin(progress * 7 - flowTime * 0.28) *
+      height * (0.012 + historicalTurbulence * 0.017) * amplitude;
+    const fineWave = Math.sin(progress * 15 + flowTime * 0.38 + layer * 0.65) *
+      height * (0.003 + turbulence * 0.005);
+    const buoyancy = -signedShock * height * 0.045;
     return {
       x: base.x,
-      y: base.y + slowWave + fineWave,
+      y: base.y + envelope * (slowWave + fineWave + buoyancy),
     };
   }
 
@@ -293,6 +288,26 @@ export function drawLightRibbons(
   ctx.globalAlpha = 1;
   ctx.fillStyle = haze;
   ctx.fillRect(0, 0, width, height);
+
+  // Original decorative crescents, deliberately outside the data band.
+  for (const [u, v, radius, rotation] of [[0.17, 0.14, 10, -0.4], [0.76, 0.86, 14, 0.5]]) {
+    ctx.save();
+    ctx.translate(width * u, height * v);
+    ctx.rotate(rotation);
+    ctx.globalAlpha = 0.65;
+    ctx.fillStyle = '#e5dcf5';
+    ctx.shadowColor = '#cbb3ef';
+    ctx.shadowBlur = 9;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, -Math.PI / 2, Math.PI / 2);
+    // The inner limb curves inside the disk, leaving a slender filled crescent.
+    ctx.bezierCurveTo(radius * 0.78, radius * 0.62, radius * 0.78, -radius * 0.62, 0, -radius);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    drawSparkle(ctx, width * u + radius * 1.9, height * v - radius, 2, 0.35);
+  }
 
   // -------------------------------------------------
   // 4. TWINKLING STARFIELD
@@ -340,11 +355,17 @@ export function drawLightRibbons(
     0
   );
 
-  colour.addColorStop(0, '#69e6ff');
-  colour.addColorStop(0.25, '#a8b2ff');
-  colour.addColorStop(0.5, '#e4b5ff');
-  colour.addColorStop(0.75, '#ff9edc');
-  colour.addColorStop(1, '#83eaff');
+  const baseline = [[105, 230, 255], [168, 178, 255], [228, 181, 255], [255, 158, 220], [131, 234, 255]];
+  const positive = [[139, 244, 255], [172, 225, 255], [222, 204, 255], [185, 192, 255], [166, 248, 255]];
+  const negative = [[172, 135, 239], [197, 142, 241], [231, 153, 221], [245, 147, 204], [165, 143, 232]];
+  const palette = baseline.map((rgb, i) => rgb.map((channel, j) =>
+    Math.round(channel + ((signedShock >= 0 ? positive : negative)[i][j] - channel) * shockPower)
+  ));
+  colour.addColorStop(0, `rgba(${palette[0].join(',')},0)`);
+  [0.12, 0.25, 0.5, 0.75, 0.88].forEach((stop, i) =>
+    colour.addColorStop(stop, `rgb(${palette[i].join(',')})`)
+  );
+  colour.addColorStop(1, `rgba(${palette[4].join(',')},0)`);
 
   // Save the positions of the finished ribbons
   // so glitter can follow their surfaces.
@@ -400,18 +421,15 @@ export function drawLightRibbons(
 
       const twist = Math.sin(
         progress * 9 -
-        seconds * 0.45 +
+        flowTime * 0.38 +
         layer * 1.7
       );
 
       const halfWidth =
-        (23 + turbulence * 13) *
+        taper(progress) * (18 + turbulence * 19) *
         (0.32 + 0.68 * Math.abs(twist));
 
-      const layerShift =
-        layer === 0
-          ? -7 - 9 * twist
-          : 7 + 9 * twist;
+      const layerShift = taper(progress) * (layer === 0 ? -7 - 9 * twist : 7 + 9 * twist);
 
       const centerX = point.x + nx * layerShift;
       const centerY = point.y + ny * layerShift;
@@ -459,13 +477,13 @@ export function drawLightRibbons(
 
     // Translucent fabric body.
     ctx.globalAlpha =
-      layer === 0 ? 0.23 : 0.16;
+      (layer === 0 ? 0.23 : 0.16) * (1 + Math.max(0, signedShock) * 0.12);
 
     ctx.fillStyle = colour;
     ctx.shadowColor =
-      layer === 0 ? '#91dfff' : '#efabef';
+      signedShock < 0 ? '#c68ce9' : '#a5e6ff';
 
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 18 + energy * (0.5 + 0.5 * Math.sin(seconds * 1.8)) * 6;
     ctx.fill();
 
     // -----------------------------------------------
@@ -483,13 +501,13 @@ export function drawLightRibbons(
 
         const ripple = Math.sin(
           progress * 18 -
-          seconds * 1.2 +
+          flowTime * 0.85 +
           strand * 0.8
         );
 
         const offset =
-          strand * 4 +
-          ripple * (1.2 + energy * 2.8);
+          taper(progress) * (strand * 4 +
+          ripple * (1.2 + turbulence * 2.8));
 
         const x = base.x + normal.x * offset;
         const y = base.y + normal.y * offset;
@@ -502,7 +520,7 @@ export function drawLightRibbons(
       }
 
       ctx.strokeStyle =
-        strand === 0 ? '#fff0ff' : colour;
+        colour;
 
       ctx.globalAlpha =
         strand === 0
@@ -530,7 +548,7 @@ export function drawLightRibbons(
     const progress =
       (
         random(i + 250) +
-        seconds * (0.002 + energy * 0.004)
+        seconds * (0.002 + turbulence * 0.004)
       ) % 1;
 
     const layer = i % 2;
@@ -561,7 +579,7 @@ export function drawLightRibbons(
       random(i + 720) * 2 - 1;
 
     const offset =
-      across * (16 + turbulence * 10);
+      taper(progress) * across * (12 + turbulence * 14);
 
     const x =
       centerX + normal.x * offset;
@@ -577,8 +595,7 @@ export function drawLightRibbons(
       );
 
     const alpha = clamp(
-      0.22 +
-      shimmer * (0.35 + energy * 0.35)
+      taper(progress) * (0.12 + shimmer * (0.25 + energy * 0.35))
     );
 
     const radius =
@@ -636,7 +653,7 @@ export function drawLightRibbons(
       point.x,
       point.y,
       3 + energy * 3,
-      0.45 + energy * 0.45
+      taper(progress) * (0.25 + energy * 0.45)
     );
   }
 
@@ -659,105 +676,10 @@ export function drawLightRibbons(
   }
 
   ctx.globalAlpha = 0.12;
-  ctx.strokeStyle = '#f8f3ff';
+  ctx.strokeStyle = colour;
   ctx.lineWidth = 0.7;
   ctx.shadowBlur = 0;
   ctx.stroke();
-
-  // -------------------------------------------------
-  // 11. SIMULATED MARKET SHOCK SPARKLE
-  // -------------------------------------------------
-
-  
-if (shockPercent !== 0) {
-  const endpoint = pricePoint(1);
-
-  const power = clamp(Math.abs(shockPercent) / 2);
-  const direction = Math.sign(shockPercent);
-
-  const burstRadius = 24 + power * 45;
-
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-
-  // A soft glow around the historical endpoint.
-  const glow = ctx.createRadialGradient(
-    endpoint.x,
-    endpoint.y,
-    0,
-    endpoint.x,
-    endpoint.y,
-    burstRadius
-  );
-
-  const colour =
-    direction > 0
-      ? '135,235,255'
-      : '255,155,218';
-
-  glow.addColorStop(
-    0,
-    `rgba(${colour},0.38)`
-  );
-
-  glow.addColorStop(
-    0.4,
-    `rgba(${colour},0.15)`
-  );
-
-  glow.addColorStop(
-    1,
-    `rgba(${colour},0)`
-  );
-
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = glow;
-
-  ctx.beginPath();
-  ctx.arc(
-    endpoint.x,
-    endpoint.y,
-    burstRadius,
-    0,
-    TAU
-  );
-  ctx.fill();
-
-  // Directional glitter:
-  // upward for a positive change,
-  // downward for a negative change.
-  for (let i = 0; i < 24; i++) {
-    const spread = random(i + 3000) * 50 - 25;
-    const distance = random(i + 4000) * burstRadius;
-
-    const x = endpoint.x + spread;
-    const y = endpoint.y - direction * distance;
-
-    const shimmer =
-      0.45 +
-      0.35 * Math.sin(seconds * 3 + i);
-
-    drawSparkle(
-      ctx,
-      x,
-      y,
-      1.5 + random(i + 5000) * 3,
-      shimmer
-    );
-  }
-
-  // The main brilliant endpoint.
-  drawSparkle(
-    ctx,
-    endpoint.x,
-    endpoint.y,
-    6 + power * 7,
-    0.95
-  );
-
-  ctx.restore();
-}
-
 
   ctx.restore();
 }

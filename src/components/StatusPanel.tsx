@@ -13,6 +13,7 @@ type Props = {
 
 function formatTime(timestamp: string) {
   return new Date(timestamp).toLocaleString('en-GB', {
+    year: 'numeric',
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
@@ -97,7 +98,7 @@ export default function StatusPanel({
           </div>
 
           <p className="status-small-note">
-            This is a pretend change, not a prediction.
+            This is a pretend change, not a prediction. The recorded path guides the ribbon; its extra movement is an artistic simulation.
           </p>
         </>
       ) : (

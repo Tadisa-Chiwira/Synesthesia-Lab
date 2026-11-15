@@ -806,3 +806,8 @@
 .pip-lesson[open] summary {
   margin-bottom: 15px;
 }
+/* Let expanded explanations and the lesson grow the page naturally. */
+.experience-grid { height: auto; min-height: max(640px, calc(100vh - 210px)); align-items: stretch; }
+.status-panel, .pip-panel { overflow: visible; }
+.audio-filename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+@media (max-width: 1050px) { .experience-grid { min-height: 0; } }

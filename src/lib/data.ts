@@ -32,10 +32,20 @@ export async function loadFxData(): Promise<FxRow[]> {
     throw new Error(parsed.errors[0].message);
   }
 
-  return parsed.data.map((row) => ({
+  const rows = parsed.data.map((row) => ({
     timestamp: row.timestamp,
     EURUSD: Number(row.EURUSD),
     USDJPY: Number(row.USDJPY),
     USDSGD: Number(row.USDSGD),
   }));
+  if (rows.length < 21 || rows.some(row =>
+    !Number.isFinite(Date.parse(row.timestamp)) ||
+    [row.EURUSD, row.USDJPY, row.USDSGD].some(rate => !Number.isFinite(rate) || rate <= 0)
+  )) {
+    throw new Error('FX data must contain at least 21 dated observations with positive rates');
+  }
+  if (rows.some((row, i) => i > 0 && Date.parse(row.timestamp) <= Date.parse(rows[i - 1].timestamp))) {
+    throw new Error('FX observations must be in chronological order');
+  }
+  return rows;
 }

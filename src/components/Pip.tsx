@@ -29,25 +29,30 @@ export default function Pip({
 
     if (reducedMotion) return;
 
+    let previousTime: number | null = null;
+    let phase = 0;
+
     function dance(time: number) {
+      const delta = previousTime === null ? 0 : Math.min((time - previousTime) / 1000, 0.05);
+      previousTime = time;
+      const market = Math.max(0, Math.min(1, marketIntensityRef.current));
+      phase += delta * (1 + market * 0.1);
       const face = faceRef.current;
 
       if (face) {
         const music = Math.min(1, audioEnergyRef.current);
-        const market = Math.min(1, marketIntensityRef.current);
 
         // Music produces the gentle dancing.
         const bounce =
-          Math.sin(time * 0.006) * music * 7;
+          Math.sin(phase * 6) * music * 7;
 
-        // Market intensity adds a little wobble.
+        // Market gently adjusts tempo; music still owns dance amplitude.
         const rotation =
-          Math.sin(time * 0.004) * music * 6 +
-          Math.sin(time * 0.012) * market * 2;
+          Math.sin(phase * 4) * music * 6;
 
         const scale = 1 + music * 0.08;
 
-        const glow = 18 + music * 42 + market * 12;
+        const glow = 18 + music * 42 + market * 8;
 
         face.style.transform =
           `translateY(${bounce}px) ` +

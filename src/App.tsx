@@ -32,8 +32,10 @@ function App() {
   const shockRef = useRef(0);
   const isMusicPlayingRef = useRef(false);
 
+  const playbackIndexRef = useRef(20);
+
   const handlePlaybackIndexChange = useCallback(
-    (index: number) => setPlaybackIndex(index),
+    (index: number) => { playbackIndexRef.current = index; setPlaybackIndex(index); },
     []
   );
 
@@ -94,14 +96,14 @@ function App() {
   const pipCommentary = isSimulating
     ? `Ooooh! You've imagined the euro ${
       shockPercent > 0 ? 'getting stronger' : 'getting weaker'
-      }. Look at how the lights and dollar value change!`
+      }. The whole ribbon responds to your imagined change, based on a frozen historical moment; stronger or weaker is not universally better.`
     : `We're turning real currency movements into light and sound.
        Let's see if you can predict what happens next!`;
 
   function changeShock(value: number) {
   // Remember the market moment when a new experiment begins.
     if (shockRef.current === 0 && value !== 0) {
-      setSimulationStartIndex(playbackIndex);
+      setSimulationStartIndex(playbackIndexRef.current);
     }
 
   // Release that starting point when the experiment ends.
@@ -202,7 +204,7 @@ function App() {
           <div className="stage-footer">
             <span>
               {isSimulating
-                ? 'Imagined exchange-rate change'
+                ? 'Historical path ? imagined intensity'
                 : 'Recorded EUR/USD movements'}
             </span>
             <span>

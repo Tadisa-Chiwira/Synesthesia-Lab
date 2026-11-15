@@ -45,7 +45,7 @@ function makeGlowSprite(r: number, g: number, b: number) {
   return sprite;
 }
 
-export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef, shockRef, isMusicPlayingRef, shockPercent, onPlaybackIndexChange,}: Props) {
+export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef, shockRef, isMusicPlayingRef, onPlaybackIndexChange,}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -82,6 +82,10 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
     const low = sorted[Math.floor(sorted.length * 0.1)];
     const high = sorted[Math.floor(sorted.length * 0.9)];
 
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let visualTime = 0;
+    let previousTime = 0;
+
     const sprites = [
       makeGlowSprite(70, 220, 255),   // Cyan
       makeGlowSprite(175, 120, 255),  // Violet
@@ -108,7 +112,8 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
     }
 
     resize();
-    window.addEventListener('resize', resize);
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
 
     const particles: Particle[] = Array.from(
       { length: 120 },
@@ -135,11 +140,14 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
 
     function animate(time: number) {
       // Advance through historical observations.
+      const delta = previousTime ? Math.min((time - previousTime) / 1000, 0.05) : 1 / 60;
+      previousTime = time;
+      if (!reducedMotion.matches) visualTime += delta * 1000;
       const shock = shockRef.current;
 
       if (shock !== 0) {
         // Freeze the current historical observation.
-        // The simulated price change is drawn separately.
+        // The renderer interprets the shock across the fabric without changing recorded prices.
         wasSimulating = true;
         lastMarketStep = time;
 
@@ -153,7 +161,7 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
         lastMarketStep = time;
 
       } else if (time - lastMarketStep >= 2000) {
-        // Music is playing: advance once per second.
+        // Music is playing: advance every two seconds.
         marketIndex += 1;
 
         if (marketIndex >= data.length) {
@@ -178,21 +186,8 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
         )
       );
 
-      const shockIntensity = Math.min(
-        1,
-        Math.abs(shock) / 1.5
-      );
-
-      const targetIntensity =
-        shock === 0
-            ? historicalIntensity
-            : Math.max(
-                historicalIntensity,
-                0.25 + shockIntensity * 0.75
-            );
-
-      // Smooth transitions in the particle behaviour.
-      intensity += (targetIntensity - intensity) * 0.035;
+      // Only historical volatility drives the historical fabric and audio filter.
+      intensity += (historicalIntensity - intensity) * (1 - Math.exp(-delta / 0.45));
       marketIntensityRef.current = intensity;
 
       ctx!.globalCompositeOperation = 'source-over';
@@ -210,10 +205,11 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
         width,
         height,
         time,
-        audioEnergyRef.current,
+        reducedMotion.matches ? 0 : audioEnergyRef.current,
         intensity,
         shockRef.current,
-        ribbonMotion
+        ribbonMotion,
+        reducedMotion.matches
       );
 
 // Preserve additive blending for our existing particles.
@@ -222,17 +218,15 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
       // Overlapping lights become brighter.
       ctx!.globalCompositeOperation = 'lighter';
 
-      const musicEnergy = audioEnergyRef.current;
+      const musicEnergy = reducedMotion.matches ? 0 : audioEnergyRef.current;
       const activeCount = Math.min(
         particles.length,
-        Math.floor(40 + intensity * 50 + musicEnergy * 30)
+        Math.floor(40 + intensity * 50)
       );
 
-      const speed = 0.6 + intensity * 1.8 + musicEnergy * 1.2;
+      const speed = reducedMotion.matches ? 0 : (0.6 + intensity * 1.8) * delta * 60;
       const direction =
-        shock !== 0
-            ? Math.sign(shock)
-            : Math.sign(returns[marketIndex]);
+        Math.sign(returns[marketIndex]);
 
       for (let i = 0; i < activeCount; i++) {
         const particle = particles[i];
@@ -241,8 +235,8 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
 
         particle.y +=
           particle.vy * speed -
-          direction * intensity * 0.7 +
-          Math.sin(time * 0.0015 + particle.phase) * 0.35;
+          direction * intensity * 0.7 * speed +
+          Math.sin(visualTime * 0.0015 + particle.phase) * 0.35 * speed;
 
         if (particle.x > width + 40) {
           particle.x = -40;
@@ -253,7 +247,7 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
         if (particle.y > height + 40) particle.y = -40;
 
         const size = particle.size * (
-            0.65 + intensity * 0.30 + musicEnergy * 0.55
+            0.65 + intensity * 0.30
         );
 
         ctx!.globalAlpha = Math.min(
@@ -280,7 +274,7 @@ export default function VisualCanvas({ data, audioEnergyRef, marketIntensityRef,
 
     return () => {
       cancelAnimationFrame(frameId);
-      window.removeEventListener('resize', resize);
+      observer.disconnect();
     };
   }, [data, audioEnergyRef, marketIntensityRef, shockRef, isMusicPlayingRef,onPlaybackIndexChange,]);
 

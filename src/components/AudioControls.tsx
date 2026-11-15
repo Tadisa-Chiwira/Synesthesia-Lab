@@ -74,7 +74,7 @@ export default function AudioControls({ audioEnergyRef, marketIntensityRef, isMu
         frequencies.reduce((sum, value) => sum + value, 0) /
         frequencies.length;
 
-      const rawEnergy = average / 255;
+      const rawEnergy = audioRef.current?.paused ? 0 : average / 255;
 
     // Track the song's recent energy peaks.
       recentPeak = Math.max(rawEnergy, recentPeak * 0.998);
@@ -164,10 +164,11 @@ export default function AudioControls({ audioEnergyRef, marketIntensityRef, isMu
       <input
         type="file"
         accept="audio/*"
+        aria-label="Upload your soundtrack"
         onChange={handleUpload}
       />
 
-      {fileName && <p>Selected: {fileName}</p>}
+      {fileName && <p className="audio-filename" title={fileName}>Selected: {fileName}</p>}
 
       {audioUrl && (
         <audio
