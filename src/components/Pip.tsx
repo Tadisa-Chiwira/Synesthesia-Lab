@@ -89,68 +89,71 @@ export default function Pip({
       </div>
 
       <p className="pip-commentary">{commentary}</p>
-
-      <div className="pip-question">
-        <strong>Let's make a prediction!</strong>
-
-        <p>
-          If one euro starts buying more dollars,
-          what happens to the dollar value of €1,000?
-        </p>
-      </div>
-
-      <div className="pip-options">
-        {choices.map((choice) => (
-          <button
-            key={choice.value}
-            className={
-              answer === choice.value
-                ? 'pip-option selected'
-                : 'pip-option'
-            }
-            aria-pressed={answer === choice.value}
-            onClick={() => {
-              setAnswer(choice.value);
-              setRevealed(false);
-            }}
-          >
-            {choice.label}
-          </button>
-        ))}
-      </div>
-
-      <button
-        className="pip-check"
-        disabled={!answer}
-        onClick={() => setRevealed(true)}
-      >
-        Check my prediction
-      </button>
-
-      {revealed && (
-        <div className="pip-feedback" aria-live="polite">
-          <strong>
-            {answer === 'increase'
-              ? '✨ Exactly!'
-              : '✨ Let’s explore that!'}
-          </strong>
+      <details className='pip-lesson'>
+        <summary>✨ Try a little currency challenge</summary>
+        
+        <div className="pip-question">
+          <strong>Let's make a prediction!</strong>
 
           <p>
-            When one euro buys more dollars,
-            €1,000 becomes worth more in dollars too.
-          </p>
-
-          <p>
-            For a 1% rise from our starting rate,
-            that's about ${gain} more.
-          </p>
-
-          <p>
-            Try moving the Market Storm slider
-            to +1% and watch the result!
+            If one euro starts buying more dollars,
+            what happens to the dollar value of €1,000?
           </p>
         </div>
-      )}
+
+        <div className="pip-options">
+          {choices.map((choice) => (
+            <button
+              key={choice.value}
+              className={
+                answer === choice.value
+                  ? 'pip-option selected'
+                  : 'pip-option'
+              }
+              aria-pressed={answer === choice.value}
+              onClick={() => {
+                setAnswer(choice.value);
+                setRevealed(false);
+              }}
+            >
+              {choice.label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          className="pip-check"
+          disabled={!answer}
+          onClick={() => setRevealed(true)}
+        >
+          Check my prediction
+        </button>
+
+        {revealed && (
+          <div className="pip-feedback" aria-live="polite">
+            <strong>
+              {answer === 'increase'
+                ? '✨ Exactly!'
+                : '✨ Let’s explore that!'}
+            </strong>
+
+            <p>
+              When one euro buys more dollars,
+              €1,000 becomes worth more in dollars too.
+            </p>
+
+            <p>
+              For a 1% rise from our starting rate,
+              that's about ${gain} more.
+            </p>
+
+            <p>
+              Try moving the Market Storm slider
+              to +1% and watch the result!
+            </p>
+          </div>
+        )}
+      </details>
     </section>
   );
 }

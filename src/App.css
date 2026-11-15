@@ -785,3 +785,24 @@
     transition: none;
   }
 }
+.pip-lesson {
+  margin-top: 14px;
+  border-top: 1px solid rgba(211, 174, 255, 0.18);
+  padding-top: 13px;
+}
+
+.pip-lesson summary {
+  cursor: pointer;
+  color: #f1d5ff;
+  font-size: 0.83rem;
+  font-weight: 650;
+  padding: 8px 0;
+}
+
+.pip-lesson summary:hover {
+  color: #ffffff;
+}
+
+.pip-lesson[open] summary {
+  margin-bottom: 15px;
+}
