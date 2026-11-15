@@ -163,7 +163,7 @@ export default function AudioControls({ audioEnergyRef, marketIntensityRef, isMu
         <div className="music-charm"><Celestial kind="music" /></div>
         <div><span className="stage-kicker">The music box</span><h2>Your soundtrack</h2></div>
       </div>
-      <p className="soundtrack-invitation">A song of your own. A sky that listens.</p>
+      <p className="soundtrack-invitation">Choose a song and see how the lights respond.</p>
 
       <label className="soundtrack-upload">
         <span className="upload-mark" aria-hidden="true">+</span>
@@ -176,25 +176,28 @@ export default function AudioControls({ audioEnergyRef, marketIntensityRef, isMu
         />
       </label>
 
-      <p className="audio-filename" title={fileName || undefined}>{fileName || 'Your favourite song, a little stardust.'}</p>
+      <p className="audio-filename" title={fileName || undefined}>{fileName || 'Audio stays on your device.'}</p>
 
       {audioUrl && (
-        <audio
-          key={audioUrl}
-          ref={audioRef}
-          controls
-          src={audioUrl}
-          onPlay={() => {
-            isMusicPlayingRef.current = true;
-            void contextRef.current?.resume();
-          }}
-          onPause={() => {
-            isMusicPlayingRef.current = false;
-          }}
-          onEnded={() => {
-            isMusicPlayingRef.current = false;
-          }}
-        />
+        <div className="music-box-player">
+          <audio
+            key={audioUrl}
+            ref={audioRef}
+            controls
+            aria-label="Your soundtrack player"
+            src={audioUrl}
+            onPlay={() => {
+              isMusicPlayingRef.current = true;
+              void contextRef.current?.resume();
+            }}
+            onPause={() => {
+              isMusicPlayingRef.current = false;
+            }}
+            onEnded={() => {
+              isMusicPlayingRef.current = false;
+            }}
+          />
+        </div>
       )}
     </section>
   );

@@ -1,3 +1,5 @@
+import AskPip from './AskPip';
+import type { PipLearningContext } from '../lib/pipLessons';
 import Celestial from './Celestial';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
@@ -6,6 +8,7 @@ type Answer = 'increase' | 'decrease' | 'same';
 type Props = {
   baseRate: number;
   commentary: string;
+  learningContext: PipLearningContext;
   audioEnergyRef: RefObject<number>;
   marketIntensityRef: RefObject<number>;
 };
@@ -13,6 +16,7 @@ type Props = {
 export default function Pip({
   baseRate,
   commentary,
+  learningContext,
   audioEnergyRef,
   marketIntensityRef,
 }: Props) {
@@ -92,76 +96,63 @@ export default function Pip({
             •ᴗ•
           </div>
         </div>
-        <div className="pip-greeting"><span className="pip-signature">Your companion, Pip</span><h2>Can you read<br />the current?</h2></div>
+        <div className="pip-greeting"><span className="pip-signature">Meet Pip!</span><h2>What happens when the euro changes?</h2></div>
       </div>
       <div className="pip-note">
         <p className="pip-commentary">{commentary}</p>
       </div>
-      <details className='pip-lesson'>
-        <summary>Try a little currency challenge <span aria-hidden="true">+</span></summary>
+      <div className="pip-learning">
+        <AskPip context={learningContext} />
+        <details className='pip-lesson'>
+          <summary>Try a challenge <span aria-hidden="true">+</span></summary>
         
-        <div className="pip-question">
-          <strong>Let's make a prediction!</strong>
-
-          <p>
-            If one euro starts buying more dollars,
-            what happens to the dollar value of €1,000?
-          </p>
-        </div>
-
-        <div className="pip-options">
-          {choices.map((choice) => (
-            <button
-              key={choice.value}
-              className={
-                answer === choice.value
-                  ? 'pip-option selected'
-                  : 'pip-option'
-              }
-              aria-pressed={answer === choice.value}
-              onClick={() => {
-                setAnswer(choice.value);
-                setRevealed(false);
-              }}
-            >
-              {choice.label}
-            </button>
-          ))}
-        </div>
-
-        <button
-          className="pip-check"
-          disabled={!answer}
-          onClick={() => setRevealed(true)}
-        >
-          Check my prediction
-        </button>
-
-        {revealed && (
-          <div className="pip-feedback" aria-live="polite">
-            <strong>
-              {answer === 'increase'
-                ? '✨ Exactly!'
-                : '✨ Let’s explore that!'}
-            </strong>
-
+          <div className="pip-question">
             <p>
-              When one euro buys more dollars,
-              €1,000 becomes worth more in dollars too.
-            </p>
-
-            <p>
-              For a 1% rise from our starting rate,
-              that's about ${gain} more.
-            </p>
-
-            <p>
-              Try moving the Market Storm slider
-              to +1% and watch the result!
+              If one euro starts buying more dollars,
+              what happens to the dollar value of €1,000?
             </p>
           </div>
-        )}
-      </details>
+
+          <div className="pip-options" role="group" aria-label="Your prediction">
+            {choices.map((choice) => (
+              <button
+                key={choice.value}
+                className={
+                  answer === choice.value
+                    ? 'pip-option selected'
+                    : 'pip-option'
+                }
+                aria-pressed={answer === choice.value}
+                onClick={() => {
+                  setAnswer(choice.value);
+                  setRevealed(false);
+                }}
+              >
+                {choice.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className="pip-check"
+            disabled={!answer}
+            onClick={() => setRevealed(true)}
+          >
+            Check my prediction
+          </button>
+
+          {revealed && (
+            <div className="pip-feedback" aria-live="polite">
+              <strong>{answer === 'increase' ? 'Exactly!' : 'Not quite, but try this:'}</strong>
+              <p>
+                The same euros buy more dollars. A 1% rise from this starting
+                rate makes €1,000 worth ${gain} more.
+                Try +1% on the slider.
+              </p>
+            </div>
+          )}
+        </details>
+      </div>
     </section>
   );
 }

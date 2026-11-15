@@ -56,7 +56,7 @@
   background: linear-gradient(145deg, #e5d9ed18, #a9bbd503);
   box-shadow: inset 0 1px #f0d8ed35;
 }
-.soundtrack-invitation { color: #bcb5cc; font: italic .82rem/1.5 Georgia, serif; margin: 13px 0; }
+.soundtrack-invitation { color: #bcb5cc; font: .82rem/1.55 "Segoe UI", sans-serif; margin: 13px 0; }
 .soundtrack-upload {
   position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px;
   padding: 7px 0; border-bottom: 1px solid #c4b1d250; cursor: pointer; color: #e4d4ec; font-size: .8rem;
@@ -97,14 +97,14 @@
 .stage-panel { position: relative; min-width: 0; text-align: center; }
 .stage-heading { padding: 4px 20px 18px; }
 .stage-heading .stage-kicker { color: #aaa2bd; font-size: .71rem; }
-.stage-heading h2 { font: italic 400 1.17rem/1.5 Georgia, serif; color: #d6c8df; margin: 6px 0 0; }
+.stage-heading h2 { font: 400 1.45rem/1.3 Georgia, serif; color: #dfd2e8; margin: 0; }
 .visual-widget {
   position: relative; width: 100%; height: clamp(390px, calc(100vh - 375px), 555px);
-  min-height: 390px; display: flex; background: #050713; border-radius: 48% 48% 5px 5px / 20% 20% 5px 5px;
+  min-height: 390px; display: flex; background: #050713; border-radius: 50% 50% 20px 20px / 44% 44% 20px 20px;
   overflow: hidden;
 }
-.visual-widget::after { content: ""; position: absolute; inset: 0; pointer-events: none; border: 1px solid #c2bddb2d;
-  border-radius: inherit; box-shadow: inset 0 0 30px #05071330; }
+.visual-widget::after { content: ""; position: absolute; inset: 0; pointer-events: none; border: 1px solid #d5c9e45c;
+  border-radius: inherit; box-shadow: inset 0 1px 1px #fff1fc35, inset 0 0 20px #d5dcff08; }
 .visual-canvas { display: block; width: 100%; height: 100%; min-width: 0; }
 .stage-footer { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 14px 3px 0; font-size: .69rem; color: #a9a3bc; line-height: 1.5; }
 .stage-footer span:last-child { color: #ddc1df; flex-shrink: 0; }
@@ -120,7 +120,7 @@
 .pip-note { position: relative; background: #252137; padding: 17px 19px 16px; border-radius: 24px 24px 24px 5px; }
 .pip-note::before { content: ""; position: absolute; width: 15px; height: 15px; top: -6px; left: 41px; transform: rotate(45deg); background: #252137; border-radius: 3px; }
 .pip-greeting h2 { font: 400 1.35rem/1.18 Georgia, serif; color: #e9d6e8; margin: 6px 0 0; }
-.pip-commentary { color: #c9bed6; font-size: .79rem; line-height: 1.65; margin: 0; }
+.pip-commentary { color: #d0c5dc; font-size: .82rem; line-height: 1.65; margin: 0; }
 .pip-lesson { margin-top: 8px; }
 .pip-lesson summary { cursor: pointer; color: #ddc8e5; font-size: .77rem; min-height: 44px; align-content: center; padding-right: 14px; }
 .pip-lesson summary span { float: right; font-size: 1.1rem; }
@@ -168,7 +168,7 @@
   .pip-introduction { justify-content: flex-start; gap: 17px; padding-bottom: 14px; }
   .pip-note { padding: 16px 18px; }
   .pip-greeting h2 { font-size: 1.22rem; }
-  .pip-commentary { font-size: .76rem; line-height: 1.55; }
+  .pip-commentary { font-size: .8rem; line-height: 1.55; }
   .storm-panel { padding-top: 17px; }
   .storm-widget h2 { font-size: 1.4rem; margin-block: 6px; }
   .shock-number { font-size: 2.2rem; margin: 0; }
@@ -215,3 +215,32 @@
 }
 
 .status-details summary:focus-visible { outline-color: #654c78; }
+
+/* Final refinements: native audio remains the only playback control surface. */
+.music-box-player {
+  margin-top: 14px; padding: 10px 8px; border: 1px solid #c7b6dc45;
+  border-radius: 15px 15px 9px 9px; background: #cab9df0b;
+  box-shadow: inset 0 1px #f3dfee21, 0 6px 16px #00000016;
+}
+.music-box-player audio { width: 100%; margin: 0; height: 40px; }
+.pip-learning { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 13px; align-items: start; }
+.pip-learning > details[open] { grid-column: 1 / -1; }
+.pip-learning summary { min-height: 44px; align-content: center; color: #e0cfe7; font-size: .78rem; cursor: pointer; padding-right: 0; }
+.pip-learning summary span { float: right; font-size: 1.05rem; }
+.pip-learning details[open] > summary span { transform: rotate(45deg); }
+.ask-pip { margin-top: 8px; min-width: 0; }
+.ask-pip label { display: block; font-size: .79rem; color: #c8bbd5; margin: 8px 0; }
+.ask-pip select { width: 100%; min-height: 44px; padding: 9px 7px; border: 1px solid #bfa6d254; border-radius: 6px; background: #201d33; color: #f3e9f5; font: inherit; font-size: .8rem; color-scheme: dark; }
+.pip-answer { color: #d0c5dc; font-size: .81rem; line-height: 1.65; margin: 13px 0 9px; }
+.status-maths { margin-top: 9px; border-top: 1px solid #8c779928; }
+.status-maths summary { color: #685773; font-size: .73rem; }
+.status-maths p { font-size: .75rem; }
+.pip-question p { margin-top: 7px; font-size: .82rem; }
+.pip-feedback { padding-top: 12px; }
+.pip-feedback p { font-size: .81rem; }
+.pip-learning summary:focus-visible, .ask-pip select:focus-visible { outline: 2px solid #bde5ed; outline-offset: 3px; border-radius: 3px; }
+@media (max-width: 700px) { .stage-heading h2 { font-size: 1.4rem; } }
+
+.pip-learning summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 9px 0 1px; }
+.pip-learning summary::-webkit-details-marker { display: none; }
+.pip-learning summary span { float: none; flex-shrink: 0; width: 18px; height: 18px; display: grid; place-items: center; }

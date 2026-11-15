@@ -1,3 +1,4 @@
+import { drawAdditionalMoons } from './decorativeMoons';
 import type { FxRow } from './data';
 
 type Point = {
@@ -308,6 +309,8 @@ export function drawLightRibbons(
     ctx.restore();
     drawSparkle(ctx, width * u + radius * 1.9, height * v - radius, 2, 0.35);
   }
+
+  drawAdditionalMoons(ctx, width, height);
 
   // -------------------------------------------------
   // 4. TWINKLING STARFIELD

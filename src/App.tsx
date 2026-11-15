@@ -96,11 +96,8 @@ function App() {
   const isSimulating = shockPercent !== 0;
 
   const pipCommentary = isSimulating
-    ? `Ooooh! You've imagined the euro ${
-      shockPercent > 0 ? 'getting stronger' : 'getting weaker'
-      }. The whole ribbon responds to your imagined change, based on a frozen historical moment; stronger or weaker is not universally better.`
-    : `We're turning real currency movements into light and sound.
-       Let's see if you can predict what happens next!`;
+    ? `One euro would buy ${shockPercent > 0 ? 'more' : 'fewer'} dollars. Your €1,000 would be worth $${Math.abs(usdChange).toFixed(2)} ${shockPercent > 0 ? 'more' : 'less'} in dollars. This is an experiment, not a prediction.`
+    : `At this recorded moment, one euro buys $${historicalRow.EURUSD.toFixed(4)}. Play a song to move through the data, or try the slider.`;
 
   function changeShock(value: number) {
   // Remember the market moment when a new experiment begins.
@@ -137,20 +134,18 @@ function App() {
         </div>
 
         <div className="topbar-note">
-          EUR / USD - an observatory for the senses
+          Euros / US dollars
         </div>
       </header>
 
       <section className="intro">
-        <div className="hero-charm hero-charm-left"><Celestial kind="moon" /><span>light &amp; wonder</span></div>
 
         <h1>
           See what the market <em>feels</em> like.
         </h1>
 
         <p className="intro-description">
-          Discover how currencies change value
-          through music, shimmering light and play.
+          Explore how currencies move through music, light and a few experiments.
         </p>
       </section>
 
@@ -181,14 +176,7 @@ function App() {
         {/* CENTRE: The living artwork */}
         <section className="stage-panel">
           <div className="stage-heading">
-            <div className="stage-kicker">
-              Market in Motion
-            </div>
-
-            <h2>
-              Light follows value.
-              Rhythm follows change.
-            </h2>
+            <h2>Market in Motion</h2>
           </div>
 
           <VisualCanvas
@@ -213,7 +201,7 @@ function App() {
                 : 'Historical data'}
             </span>
           </div>
-          <p className="artwork-caption">Recorded rates draw the path; market movement shapes the flow. Music adds shimmer.</p>
+          <p className="artwork-caption">The ribbon follows currency movements. The sparkles respond to your music.</p>
         </section>
 
         {/* RIGHT: Pip and the experiment */}
@@ -222,6 +210,13 @@ function App() {
             <Pip
               baseRate={baseRate}
               commentary={pipCommentary}
+              learningContext={{
+                baseRate,
+                displayedRate: isSimulating ? simulatedRate : historicalRow.EURUSD,
+                shockPercent,
+                dollarChange: usdChange,
+                timestamp: baselineRow.timestamp,
+              }}
               audioEnergyRef={audioEnergyRef}
               marketIntensityRef={marketIntensityRef}
             />
@@ -229,14 +224,10 @@ function App() {
 
           <div className="storm-panel">
             <section className="storm-widget">
-              <div className="stage-kicker">
-                Market Storm
-              </div>
-
-              <h2>Conduct the current</h2>
+              <h2>Market Storm</h2>
 
               <p>
-                Move the pearl. Imagine one euro buying more or fewer dollars.
+                Try changing the exchange rate and see what happens to €1,000.
               </p>
 
               <div className="storm-dial">

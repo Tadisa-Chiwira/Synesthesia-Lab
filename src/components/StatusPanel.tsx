@@ -146,14 +146,24 @@ export default function StatusPanel({
           </p>
         ) : (
           <p>
-            Market turbulence means how much the rate
-            has been jumping around recently. We compare
-            the last 20 recorded changes with the rest
-            of this historical dataset.
-            The measured volatility is{' '}
-            {(historicalVolatility * 100).toFixed(4)}%.
+            Calm means smaller recent changes compared with this dataset.
+            Restless means a little more movement; turbulent means larger or
+            more varied changes. This describes how much the rate moves,
+            not whether it goes up or down, or whether you gain or lose money.
           </p>
         )}
+        <details className="status-maths">
+          <summary>See the maths</summary>
+          <p>
+            Volatility here is the sample standard deviation of the last 20
+            logarithmic returns (21 recorded rates). Each return is
+            ln(current rate / previous rate). The value is{' '}
+            {(historicalVolatility * 100).toFixed(4)}% per observation,
+            not annualised. The calm, restless and turbulent bands split
+            rolling values across this dataset into thirds.
+            {isSimulating && ' This measure belongs to the frozen historical observation, not the imagined change.'}
+          </p>
+        </details>
       </details>
     </section>
   );
