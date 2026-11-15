@@ -1,0 +1,13 @@
+
+/* A deliberately small vocabulary: one moon, a music charm, Pip's three stars. */
+.celestial { width: 24px; height: 24px; color: currentColor; vertical-align: middle; flex-shrink: 0; pointer-events: none; }
+.wordmark-star { width: 23px; height: 23px; color: #e9d6eb; }
+.music-charm .celestial { width: 36px; height: 36px; color: #e2cde6; }
+.hero-charm { position: absolute; left: 3%; top: 31px; transform: rotate(-16deg); pointer-events: none; }
+.hero-charm .celestial { width: 42px; height: 42px; color: #d2c5dd; filter: drop-shadow(0 0 9px #ceb6e025); }
+.hero-charm span { display: block; margin-top: 7px; font: italic .7rem Georgia, serif; color: #afa0c0; }
+.pip-spark { position: absolute; color: #efdaed; filter: drop-shadow(0 0 5px #e7b9f044); }
+.pip-spark-one { width: 17px; height: 17px; top: -5px; right: -16px; transform: rotate(10deg); }
+.pip-spark-two { width: 10px; height: 10px; bottom: 1px; left: -13px; }
+.pip-spark-three { width: 6px; height: 6px; bottom: -3px; right: -5px; }
+@media (max-width: 900px) { .hero-charm { display: none; } }

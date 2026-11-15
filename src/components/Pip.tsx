@@ -1,3 +1,4 @@
+import Celestial from './Celestial';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
 type Answer = 'increase' | 'decrease' | 'same';
@@ -82,20 +83,22 @@ export default function Pip({
 
   return (
     <section className="pip-widget">
-      <div className="pip-mini-header">
-        <div className="pip-face" ref={faceRef}>
-          •ᴗ•
+      <div className="pip-introduction">
+        <div className="pip-portrait">
+          <Celestial className="pip-spark pip-spark-one" />
+          <Celestial className="pip-spark pip-spark-two" />
+          <Celestial className="pip-spark pip-spark-three" />
+          <div className="pip-face" ref={faceRef}>
+            •ᴗ•
+          </div>
         </div>
-
-        <div>
-          <span className="stage-kicker">Pip notices...</span>
-          <h2>Can you read the current?</h2>
-        </div>
+        <div className="pip-greeting"><span className="pip-signature">Your companion, Pip</span><h2>Can you read<br />the current?</h2></div>
       </div>
-
-      <p className="pip-commentary">{commentary}</p>
+      <div className="pip-note">
+        <p className="pip-commentary">{commentary}</p>
+      </div>
       <details className='pip-lesson'>
-        <summary>✨ Try a little currency challenge</summary>
+        <summary>Try a little currency challenge <span aria-hidden="true">+</span></summary>
         
         <div className="pip-question">
           <strong>Let's make a prediction!</strong>

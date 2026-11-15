@@ -78,7 +78,7 @@ export default function StatusPanel({
         )}
       </p>
 
-      <div className="status-divider" />
+      <div className="reading-divider" aria-hidden="true"><span /></div>
 
       {isSimulating ? (
         <>

@@ -8,6 +8,8 @@ import {
 } from 'react';
 
 import './App.css';
+import './celestial.css';
+import Celestial from './components/Celestial';
 
 import { loadFxData, type FxRow } from './lib/data';
 import {
@@ -119,8 +121,8 @@ function App() {
     <div className="app-shell">
       <header className="topbar">
         <div className="wordmark">
-          <span className="wordmark-star">✦</span>
-          SYNESTHESIA LAB
+          <Celestial className="wordmark-star" />
+          <span>Synesthesia <i>Lab</i></span>
         </div>
 
         <div className="mode-indicator">
@@ -135,14 +137,12 @@ function App() {
         </div>
 
         <div className="topbar-note">
-          An experiment in light, sound and currency
+          EUR / USD - an observatory for the senses
         </div>
       </header>
 
       <section className="intro">
-        <p className="eyebrow">
-          EUR / USD · A study in light and sound
-        </p>
+        <div className="hero-charm hero-charm-left"><Celestial kind="moon" /><span>light &amp; wonder</span></div>
 
         <h1>
           See what the market <em>feels</em> like.
@@ -157,7 +157,7 @@ function App() {
       <main className="experience-grid">
         {/* LEFT: Music and market explanation */}
         <aside className="rail rail-left">
-          <div className="glass-panel soundtrack-panel">
+          <div className="soundtrack-panel">
             <AudioControls
               audioEnergyRef={audioEnergyRef}
               marketIntensityRef={marketIntensityRef}
@@ -165,7 +165,7 @@ function App() {
             />
           </div>
 
-          <div className="glass-panel status-panel">
+          <div className="status-panel">
             <StatusPanel
               shockPercent={shockPercent}
               historicalRow={historicalRow}
@@ -179,7 +179,7 @@ function App() {
         </aside>
 
         {/* CENTRE: The living artwork */}
-        <section className="glass-panel stage-panel">
+        <section className="stage-panel">
           <div className="stage-heading">
             <div className="stage-kicker">
               Market in Motion
@@ -204,7 +204,7 @@ function App() {
           <div className="stage-footer">
             <span>
               {isSimulating
-                ? 'Historical path ? imagined intensity'
+                ? 'Historical path / imagined intensity'
                 : 'Recorded EUR/USD movements'}
             </span>
             <span>
@@ -213,11 +213,12 @@ function App() {
                 : 'Historical data'}
             </span>
           </div>
+          <p className="artwork-caption">Recorded rates draw the path; market movement shapes the flow. Music adds shimmer.</p>
         </section>
 
         {/* RIGHT: Pip and the experiment */}
         <aside className="rail rail-right">
-          <div className="glass-panel pip-panel">
+          <div className="pip-panel">
             <Pip
               baseRate={baseRate}
               commentary={pipCommentary}
@@ -226,7 +227,7 @@ function App() {
             />
           </div>
 
-          <div className="glass-panel storm-panel">
+          <div className="storm-panel">
             <section className="storm-widget">
               <div className="stage-kicker">
                 Market Storm
@@ -235,16 +236,17 @@ function App() {
               <h2>Conduct the current</h2>
 
               <p>
-                What if the euro suddenly changed value?
-                Try it below.
+                Move the pearl. Imagine one euro buying more or fewer dollars.
               </p>
 
-              <div
-                className="shock-number"
-                aria-live="off"
-              >
-                {shockPercent > 0 ? '+' : ''}
-                {shockPercent.toFixed(1)}%
+              <div className="storm-dial">
+                <div className="shock-number" aria-live="off">
+                  {shockPercent > 0 ? '+' : ''}
+                  {shockPercent.toFixed(1)}%
+                </div>
+                <button className="reset-button" onClick={() => changeShock(0)}>
+                  Reset
+                </button>
               </div>
 
               <label htmlFor="shock">
@@ -277,7 +279,7 @@ function App() {
                 </div>
 
                 <div className="storm-result">
-                  <span>Change in value of €1,000</span>
+                  <span>€1,000 changes by</span>
                   <strong>
                     {usdChange >= 0 ? '+' : '-'}$
                     {Math.abs(usdChange).toFixed(2)}
@@ -285,16 +287,8 @@ function App() {
                 </div>
               </div>
 
-              <button
-                className="reset-button"
-                onClick={() => changeShock(0)}
-              >
-                Reset experiment
-              </button>
-
               <p className="simulation-note">
-                A pretend change based on a recorded
-                exchange rate, not a prediction.
+                An imagined change from a recorded rate, never a prediction.
               </p>
             </section>
           </div>

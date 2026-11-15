@@ -1,3 +1,4 @@
+import Celestial from './Celestial';
 
 import {
   useEffect,
@@ -158,17 +159,24 @@ export default function AudioControls({ audioEnergyRef, marketIntensityRef, isMu
 
   return (
     <section className="audio-widget">
-      <h2>Your Soundtrack</h2>
-      <p>Let your music bring the market to life.</p>
+      <div className="soundtrack-heading">
+        <div className="music-charm"><Celestial kind="music" /></div>
+        <div><span className="stage-kicker">The music box</span><h2>Your soundtrack</h2></div>
+      </div>
+      <p className="soundtrack-invitation">A song of your own. A sky that listens.</p>
 
-      <input
-        type="file"
-        accept="audio/*"
-        aria-label="Upload your soundtrack"
-        onChange={handleUpload}
-      />
+      <label className="soundtrack-upload">
+        <span className="upload-mark" aria-hidden="true">+</span>
+        <span>{fileName ? 'Change soundtrack' : 'Choose your soundtrack'}</span>
+        <input
+          type="file"
+          accept="audio/*"
+          aria-label="Upload your soundtrack"
+          onChange={handleUpload}
+        />
+      </label>
 
-      {fileName && <p className="audio-filename" title={fileName}>Selected: {fileName}</p>}
+      <p className="audio-filename" title={fileName || undefined}>{fileName || 'Your favourite song, a little stardust.'}</p>
 
       {audioUrl && (
         <audio
@@ -186,7 +194,6 @@ export default function AudioControls({ audioEnergyRef, marketIntensityRef, isMu
           onEnded={() => {
             isMusicPlayingRef.current = false;
           }}
-          style={{ width: '100%', marginTop: 16 }}
         />
       )}
     </section>
